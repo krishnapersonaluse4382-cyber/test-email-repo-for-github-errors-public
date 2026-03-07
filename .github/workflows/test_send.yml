@@ -1,6 +1,8 @@
 name: Comparison Test (Old Way)
 
 on:
+  push:
+    branches: [main]
   workflow_dispatch: # Allows us to run it manually like you did before
 
 jobs:
