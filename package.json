@@ -1,0 +1,9 @@
+{
+  "name": "antigravity-test-lab",
+  "version": "1.0.0",
+  "description": "Comparison test for GitHub vs Supabase",
+  "main": "test_github_send.js",
+  "dependencies": {
+    "nodemailer": "^6.9.7"
+  }
+}
