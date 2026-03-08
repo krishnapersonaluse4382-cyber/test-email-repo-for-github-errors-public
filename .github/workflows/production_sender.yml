@@ -3,6 +3,8 @@ name: Production Email Burst
 on:
   schedule:
     - cron: '*/10 * * * *' # Every 10 minutes
+  push:
+    branches: [main]
   workflow_dispatch: # Allows you to trigger it manually for testing
 
 jobs:
