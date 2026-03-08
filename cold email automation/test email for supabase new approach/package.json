@@ -1,0 +1,15 @@
+{
+    "name": "supabase-cold-email-engine",
+    "version": "1.0.0",
+    "description": "Robust Cold Email Engine with Supabase Cloud-Locking",
+    "main": "sender_engine.js",
+    "scripts": {
+        "start": "node sender_engine.js"
+    },
+    "dependencies": {
+        "@supabase/supabase-js": "^2.39.0",
+        "dotenv": "^16.3.1",
+        "nodemailer": "^6.9.7",
+        "xlsx": "^0.18.5"
+    }
+}
