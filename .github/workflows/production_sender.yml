@@ -1,36 +1,25 @@
-name: Production Email Burst
+name: "Final Verification Send"
 
 on:
   schedule:
-    - cron: '*/10 * * * *' # Every 10 minutes
-  push:
-    branches: [main]
-  workflow_dispatch: # Allows you to trigger it manually for testing
+    - cron: "43 8 * * *" # 2:13 PM IST (Giving 1 extra min for push)
+  workflow_dispatch:
 
 jobs:
-  send-emails:
+  send-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
         with:
-          node-version: '20'
-      
+          node-version: '18'
       - name: Install dependencies
-        run: |
-          cd "cold email automation/test email for supabase new approach"
-          npm install
-
-      - name: Run Sender Engine
-        run: |
-          cd "cold email automation/test email for supabase new approach"
-          node production_sender.js
+        run: npm install
+      - name: Run Rik Test
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
-          RYAN_USER: ${{ secrets.RYAN_USER }}
-          RYAN_PASS: ${{ secrets.RYAN_PASS }}
           RIK_USER: ${{ secrets.RIK_USER }}
           RIK_PASS: ${{ secrets.RIK_PASS }}
+        run: node "cold email automation/test email for supabase new approach/test_rik_final.js"
