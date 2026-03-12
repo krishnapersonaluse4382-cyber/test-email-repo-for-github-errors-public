@@ -1,6 +1,7 @@
 require('dotenv').config();
 const nodemailer = require('nodemailer');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
@@ -43,12 +44,16 @@ async function sendSafeEmail(senderKey, leadEmail, campaignId, subject, body) {
             return;
         }
 
-        // Apply Lock
+        // Generate Unique ID for Tracking
+        const emailId = crypto.randomUUID();
+        const trackingUrl = `https://email-dashboard-app.vercel.app/api/track?id=${emailId}`;
+
+        // Apply Lock with ID
         await supabase.from('email_logs').upsert({
+            id: emailId,
             email: leadEmail,
             campaign_id: campaignId,
             status: 'SENDING_NOW',
-            sender_email: senderEmail, // Track WHO is sending
             started_at: new Date().toISOString()
         }, { onConflict: 'email,campaign_id' });
 
@@ -58,7 +63,12 @@ async function sendSafeEmail(senderKey, leadEmail, campaignId, subject, body) {
             from: senderEmail,
             to: leadEmail,
             subject: subject,
-            text: body
+            html: `
+                <div style="font-family: sans-serif;">
+                    ${body.replace(/\n/g, '<br>')}
+                    <img src="${trackingUrl}" width="1" height="1" style="display:none !important;" />
+                </div>
+            `
         });
         console.log(`[SUCCESS]: Msg ID: ${info.messageId}`);
 

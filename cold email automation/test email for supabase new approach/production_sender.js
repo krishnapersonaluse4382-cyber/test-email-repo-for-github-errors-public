@@ -61,11 +61,18 @@ async function sendSafeEmail(senderKey, lead, campaignId, subject, body) {
             auth: { user: senderEmail, pass: senders[senderKey].pass }
         });
 
+        const trackingUrl = `https://email-dashboard-app.vercel.app/api/track?id=${lead.id}`;
+
         await transporter.sendMail({
             from: `"Krishna" <${senderEmail}>`,
             to: leadEmail,
             subject: subject,
-            text: body
+            html: `
+                <div style="font-family: sans-serif;">
+                    ${body.replace(/\n/g, '<br>')}
+                    <img src="${trackingUrl}" width="1" height="1" style="display:none !important;" />
+                </div>
+            `
         });
 
         // 4. RELEASE LOCK: Mark as SENT
