@@ -1,9 +1,11 @@
 name: "Production Sender Engine"
 
 on:
-  schedule:
-    - cron: "*/5 * * * *" # Trigger every 5 minutes (GitHub minimum)
+  # schedule:
+  #   - cron: "*/5 * * * *" # Trigger every 5 minutes (GitHub minimum)
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   process-queue:

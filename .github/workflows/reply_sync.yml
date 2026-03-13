@@ -1,9 +1,11 @@
 name: "Reply Sync Engine"
 
 on:
-  schedule:
-    - cron: "*/5 * * * *" # Minimum GitHub interval
+  # schedule:
+  #   - cron: "*/5 * * * *" # Minimum GitHub interval
   workflow_dispatch:
+  push:
+    branches: [ main ]
 
 jobs:
   sync-replies:
