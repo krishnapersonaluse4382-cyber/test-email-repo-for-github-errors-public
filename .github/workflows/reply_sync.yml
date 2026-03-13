@@ -2,8 +2,8 @@ name: "Reply Sync Engine"
 
 on:
   schedule:
-    - cron: "*/30 * * * *" # Runs every 30 minutes
-  workflow_dispatch: # Allows manual trigger
+    - cron: "*/5 * * * *" # Minimum GitHub interval
+  workflow_dispatch:
 
 jobs:
   sync-replies:
@@ -18,7 +18,7 @@ jobs:
         run: |
           cd "cold email automation/test email for supabase new approach"
           npm install
-      - name: Run Reply Sync
+      - name: Run Reply Sync Loop (Every 60s)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -28,4 +28,14 @@ jobs:
           RYAN_PASS: ${{ secrets.RYAN_PASS }}
           RIK_USER: ${{ secrets.RIK_USER }}
           RIK_PASS: ${{ secrets.RIK_PASS }}
-        run: node "cold email automation/test email for supabase new approach/reply_sync_engine.js"
+        run: |
+          cd "cold email automation/test email for supabase new approach"
+          for i in {1..5}
+          do
+            echo "--- Sync Run $i of 5 ---"
+            node reply_sync_engine.js
+            if [ $i -lt 5 ]; then
+              echo "Waiting 60 seconds..."
+              sleep 60
+            fi
+          done

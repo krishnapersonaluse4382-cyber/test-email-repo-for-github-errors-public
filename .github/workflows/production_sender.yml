@@ -2,8 +2,8 @@ name: "Production Sender Engine"
 
 on:
   schedule:
-    - cron: "*/15 * * * *" # Runs every 15 minutes
-  workflow_dispatch: # Allows manual trigger
+    - cron: "*/5 * * * *" # Trigger every 5 minutes (GitHub minimum)
+  workflow_dispatch:
 
 jobs:
   process-queue:
@@ -18,7 +18,7 @@ jobs:
         run: |
           cd "cold email automation/test email for supabase new approach"
           npm install
-      - name: Run Sender Engine
+      - name: Run Sender Loop (Every 60s)
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
@@ -28,4 +28,14 @@ jobs:
           RYAN_PASS: ${{ secrets.RYAN_PASS }}
           RIK_USER: ${{ secrets.RIK_USER }}
           RIK_PASS: ${{ secrets.RIK_PASS }}
-        run: node "cold email automation/test email for supabase new approach/sender_engine.js"
+        run: |
+          cd "cold email automation/test email for supabase new approach"
+          for i in {1..5}
+          do
+            echo "--- Run $i of 5 ---"
+            node sender_engine.js
+            if [ $i -lt 5 ]; then
+              echo "Waiting 60 seconds..."
+              sleep 60
+            fi
+          done
