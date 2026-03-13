@@ -14,6 +14,19 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+      - name: Debug Check
+        run: |
+          echo "Current working directory: $(pwd)"
+          echo "Checking for project folder..."
+          if [ -d "cold email automation/test email for supabase new approach" ]; then
+            echo "✅ Project folder found."
+          else
+            echo "❌ Project folder NOT found!"
+            ls -R
+          fi
+          echo "Checking if secrets are populated (checking length only)..."
+          if [ -n "${{ secrets.SUPABASE_URL }}" ]; then echo "✅ SUPABASE_URL exists"; else echo "❌ SUPABASE_URL is MISSING"; fi
+          if [ -n "${{ secrets.SUPABASE_KEY }}" ]; then echo "✅ SUPABASE_KEY exists"; else echo "❌ SUPABASE_KEY is MISSING"; fi
       - name: Install dependencies
         run: |
           cd "cold email automation/test email for supabase new approach"

@@ -3,6 +3,12 @@ const { simpleParser } = require('mailparser');
 const { createClient } = require('@supabase/supabase-js');
 require('dotenv').config();
 
+if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
+    console.error("❌ CRITICAL ERROR: SUPABASE_URL or SUPABASE_KEY is missing from environment variables.");
+    console.error("If running in GitHub Actions, ensure you have added these to Repository Secrets.");
+    process.exit(1);
+}
+
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
 const accounts = [
