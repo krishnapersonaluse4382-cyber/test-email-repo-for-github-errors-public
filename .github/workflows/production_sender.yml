@@ -1,8 +1,7 @@
-name: "Production Sender Engine"
 
 on:
-  # schedule:
-  #   - cron: "*/5 * * * *" # Trigger every 5 minutes (GitHub minimum)
+  schedule:
+    - cron: "*/5 * * * *" # Trigger every 5 minutes (GitHub minimum)
   workflow_dispatch:
   push:
     branches: [ main ]
@@ -37,8 +36,8 @@ jobs:
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
-          EMAIL_USER: ${{ secrets.EMAIL_USER }}
-          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          EMAIL_USER: ${{ secrets.KRISHNA_USER }}
+          EMAIL_PASS: ${{ secrets.KRISHNA_PASS }}
           RYAN_USER: ${{ secrets.RYAN_USER }}
           RYAN_PASS: ${{ secrets.RYAN_PASS }}
           RIK_USER: ${{ secrets.RIK_USER }}
