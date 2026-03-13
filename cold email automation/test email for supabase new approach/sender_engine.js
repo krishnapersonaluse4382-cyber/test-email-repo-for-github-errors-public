@@ -11,6 +11,9 @@ if (!process.env.SUPABASE_URL || !process.env.SUPABASE_KEY) {
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
+console.log(`🔗 Connecting to Supabase: ${process.env.SUPABASE_URL.substring(0, 15)}...`);
+console.log(`👤 Using Sender: ${process.env.EMAIL_USER ? process.env.EMAIL_USER.split('@')[0] : 'MISSING'} (Password present: ${!!process.env.EMAIL_PASS})`);
+
 const senders = {
     KRISHNA: { user: process.env.EMAIL_USER, pass: process.env.EMAIL_PASS, label: "Krishna (Content Elevators)" },
     RYAN: { user: process.env.RYAN_USER, pass: process.env.RYAN_PASS, label: "Ryan (Content Elevators)" },

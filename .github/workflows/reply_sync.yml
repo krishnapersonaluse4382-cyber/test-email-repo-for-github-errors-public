@@ -24,11 +24,12 @@ jobs:
             echo "✅ Project folder found."
           else
             echo "❌ Project folder NOT found!"
-            ls -R
           fi
           echo "Checking if secrets are populated (checking length only)..."
-          if [ -n "${{ secrets.SUPABASE_URL }}" ]; then echo "✅ SUPABASE_URL exists"; else echo "❌ SUPABASE_URL is MISSING"; fi
-          if [ -n "${{ secrets.SUPABASE_KEY }}" ]; then echo "✅ SUPABASE_KEY exists"; else echo "❌ SUPABASE_KEY is MISSING"; fi
+          [ -n "${{ secrets.SUPABASE_URL }}" ] && echo "✅ SUPABASE_URL exists" || echo "❌ SUPABASE_URL is MISSING"
+          [ -n "${{ secrets.SUPABASE_KEY }}" ] && echo "✅ SUPABASE_KEY exists" || echo "❌ SUPABASE_KEY is MISSING"
+          [ -n "${{ secrets.KRISHNA_USER }}" ] && echo "✅ KRISHNA_USER exists" || echo "❌ KRISHNA_USER is MISSING"
+          [ -n "${{ secrets.KRISHNA_PASS }}" ] && echo "✅ KRISHNA_PASS exists" || echo "❌ KRISHNA_PASS is MISSING"
       - name: Install dependencies
         run: |
           cd "cold email automation/test email for supabase new approach"
