@@ -1,32 +1,28 @@
--- 1. Upgrade for Advanced Tracking (adding DNA Metadata)
-ALTER TABLE public.email_sent ADD COLUMN IF NOT EXISTS structure_type TEXT;
-ALTER TABLE public.email_sent ADD COLUMN IF NOT EXISTS persuasion_rule TEXT;
-ALTER TABLE public.email_sent ADD COLUMN IF NOT EXISTS tone_setting TEXT;
+-- RUN THESE IN THE SUPABASE SQL EDITOR TO UPGRADE TO THE PRODUCTION QUEUE SYSTEM
 
--- 2. Create the Lead Ingestion Table
-CREATE TABLE IF NOT EXISTS public.leads_to_email (
+-- 1. Add missing columns to email_logs for queue-based sending
+ALTER TABLE public.email_logs ADD COLUMN IF NOT EXISTS sender_account TEXT;
+ALTER TABLE public.email_logs ADD COLUMN IF NOT EXISTS subject TEXT;
+ALTER TABLE public.email_logs ADD COLUMN IF NOT EXISTS body TEXT;
+ALTER TABLE public.email_logs ADD COLUMN IF NOT EXISTS created_at TIMESTAMP WITH TIME ZONE DEFAULT now();
+
+-- 2. Create the replies table if it doesn't already exist
+CREATE TABLE IF NOT EXISTS public.email_replies (
     id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
-    email TEXT NOT NULL,
-    first_name TEXT,
-    company_name TEXT,
-    job_title TEXT,
-    industry TEXT,
-    lead_source TEXT,
-    personalized_hook TEXT, -- Where the AI stored its pre-written hook
-    status TEXT DEFAULT 'PENDING', -- PENDING, PROCESSING, SENT, FAILED
-    assigned_agent TEXT, -- Krishna, Ryan, Rik
-    campaign_name TEXT,
-    dna_structure TEXT, -- The "A, B, C" combo we choose
-    created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
-    last_status_update TIMESTAMP WITH TIME ZONE
+    email_id UUID REFERENCES public.email_logs(id), -- Links to the original send
+    from_email TEXT NOT NULL,
+    to_email TEXT NOT NULL,
+    subject TEXT,
+    replied_at TIMESTAMP WITH TIME ZONE,
+    message_id TEXT UNIQUE, -- Prevents duplicate reply logging
+    created_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
--- 3. Enable RLS for Security
-ALTER TABLE public.leads_to_email ENABLE ROW LEVEL SECURITY;
+-- 3. Enable RLS for replies (just in case)
+ALTER TABLE public.email_replies ENABLE ROW LEVEL SECURITY;
 
--- 4. Allow anonymous access (assuming use of anon key for testing)
-CREATE POLICY "Public full access" ON public.leads_to_email FOR ALL USING (true) WITH CHECK (true);
-
--- 5. Index for faster ingestion
-CREATE INDEX IF NOT EXISTS idx_leads_status ON public.leads_to_email(status);
-CREATE INDEX IF NOT EXISTS idx_leads_agent ON public.leads_to_email(assigned_agent);
+-- 4. Allow access to replies
+CREATE POLICY "Enable all for anyone replies" ON public.email_replies
+    FOR ALL
+    USING (true)
+    WITH CHECK (true);

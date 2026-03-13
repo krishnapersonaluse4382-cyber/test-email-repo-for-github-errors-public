@@ -22,17 +22,18 @@ This is a verification email from the RIK account to confirm the automated pipel
     
 Best,
 The Team`;
-
     const leads = [
-        "krishnapersonaluse438@gmail.com"
-        // Add more lead emails here
+        "krishnapersonaluse438@gmail.com",
+        "krishnapersonaluse4382@gmail.com",
+        "krishnapersonaluse4383@gmail.com",
+        "krishnapersonaluse4384@gmail.com"
     ];
 
     console.log(`🚀 Ingesting ${leads.length} leads for Campaign: ${campaignId}`);
 
     for (const email of leads) {
         const id = crypto.randomUUID();
-        
+
         const { error } = await supabase
             .from('email_logs')
             .upsert({
