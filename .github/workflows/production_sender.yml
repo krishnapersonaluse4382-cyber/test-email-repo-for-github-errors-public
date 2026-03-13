@@ -1,12 +1,12 @@
-name: "Final Verification Send"
+name: "Production Sender Engine"
 
 on:
   schedule:
-    - cron: "43 8 * * *" # 2:13 PM IST (Giving 1 extra min for push)
-  workflow_dispatch:
+    - cron: "*/15 * * * *" # Runs every 15 minutes
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
-  send-test:
+  process-queue:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
@@ -15,11 +15,17 @@ jobs:
         with:
           node-version: '18'
       - name: Install dependencies
-        run: npm install
-      - name: Run Rik Test
+        run: |
+          cd "cold email automation/test email for supabase new approach"
+          npm install
+      - name: Run Sender Engine
         env:
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_KEY: ${{ secrets.SUPABASE_KEY }}
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          RYAN_USER: ${{ secrets.RYAN_USER }}
+          RYAN_PASS: ${{ secrets.RYAN_PASS }}
           RIK_USER: ${{ secrets.RIK_USER }}
           RIK_PASS: ${{ secrets.RIK_PASS }}
-        run: node "cold email automation/test email for supabase new approach/test_rik_final.js"
+        run: node "cold email automation/test email for supabase new approach/sender_engine.js"

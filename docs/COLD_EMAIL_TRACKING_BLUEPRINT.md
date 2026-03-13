@@ -17,7 +17,7 @@ const isBot = /bot|crawler|spider|headless|inspect|preview|whatsapp|bing|slurp|d
 if (id && !isBot) {
     await fetch(`${SUPABASE_URL}/rest/v1/email_opens`, {
         method: 'POST',
-        headers: { ...config },
+        headers: { ...config
         body: JSON.stringify({ email_id: id, opened_at: new Date() })
     });
 }

@@ -276,7 +276,7 @@ Recipients see no pattern. Looks like a human sending manually.
 - 10:00 AM IST = 4:30 AM UTC
 - 12:00 PM IST = 6:30 AM UTC
 - 2:00 PM IST = 8:30 AM UTC
-
+ 
 Formula: UTC = IST - 5h30m
 
 ---

@@ -1,52 +1,59 @@
 require('dotenv').config();
-const xlsx = require('xlsx');
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-async function ingestExcelLeads() {
-    const excelPath = 'C:\\Users\\praja\\Downloads\\emails execl supabase test.xlsx';
-    console.log(`Reading Excel: ${excelPath}`);
+/**
+ * PRODUCTION INGESTION GUIDE:
+ * 1. Define your Campaign ID.
+ * 2. Define the Sender Account (KRISHNA, RYAN, or RIK).
+ * 3. Define the Subject and Body.
+ * 4. provide the list of lead emails.
+ */
 
-    const workbook = xlsx.readFile(excelPath);
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const data = xlsx.utils.sheet_to_json(sheet);
+async function ingestLeads() {
+    const campaignId = "V8_BULLETPROOF_SYNC_PROOF"; // UPDATE THIS FOR EACH CAMPAIGN
+    const senderAccount = "RIK"; // KRISHNA, RYAN, or RIK
+    const subject = "Final Production Verification - It Works!";
+    const body = `Hello! 
+    
+This is a verification email from the RIK account to confirm the automated pipeline is now live and stable.
+    
+Best,
+The Team`;
 
-    const campaignId = "MULTI_SENDER_CAMPAIGN_001";
+    const leads = [
+        "krishnapersonaluse438@gmail.com"
+        // Add more lead emails here
+    ];
 
-    console.log(`Found ${data.length} rows. filtering valid emails...`);
+    console.log(`🚀 Ingesting ${leads.length} leads for Campaign: ${campaignId}`);
 
-    for (const row of data) {
-        const email = row['Emails'];
-        const name = row['Name'];
-
-        if (!email || !email.includes('@')) continue;
-
-        console.log(`Checking/Ingesting: ${email} (${name})`);
-
-        // We add them to Supabase so the Sender Engine can pick them up
-        const { data: existing } = await supabase
+    for (const email of leads) {
+        const id = crypto.randomUUID();
+        
+        const { error } = await supabase
             .from('email_logs')
-            .select('status')
-            .eq('email', email)
-            .eq('campaign_id', campaignId)
-            .maybeSingle();
+            .upsert({
+                id: id,
+                email: email,
+                campaign_id: campaignId,
+                status: 'READY',
+                sender_account: senderAccount,
+                subject: subject,
+                body: body,
+                created_at: new Date().toISOString()
+            }, { onConflict: 'email,campaign_id' });
 
-        if (!existing) {
-            const { error } = await supabase
-                .from('email_logs')
-                .insert({
-                    email: email,
-                    campaign_id: campaignId,
-                    status: 'READY' // Custom status for our loop
-                });
-            if (error) console.error(`Error inserting ${email}:`, error);
-            else console.log(`[READY]: ${email} added to campaign.`);
+        if (error) {
+            console.error(`❌ Failed to ingest ${email}:`, error.message);
         } else {
-            console.log(`[SKIP]: ${email} already in database (${existing.status})`);
+            console.log(`✅ ${email} is READY to be sent.`);
         }
     }
-    console.log("--- INGESTION COMPLETE ---");
+
+    console.log("🏁 Ingestion step finished.");
 }
 
-ingestExcelLeads();
+ingestLeads();

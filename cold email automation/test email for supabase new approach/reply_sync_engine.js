@@ -12,7 +12,7 @@ const accounts = [
 ].filter(acc => acc.user && acc.pass);
 
 async function syncReplies() {
-    console.log(`🚀 Starting Reply Sync for ${accounts.length} accounts...`);
+    console.log(`🚀 [${new Date().toISOString()}] Starting Production Reply Sync...`);
 
     for (const acc of accounts) {
         try {
@@ -44,11 +44,11 @@ function processAccount(acc) {
             openInbox((err, box) => {
                 if (err) return reject(err);
 
-                // Search for all messages since yesterday to find replies
+                // For production, we scan the last 24 hours to ensure no misses
                 const yesterday = new Date();
-                yesterday.setDate(yesterday.getDate() - 2); // 2 days back to be safe
+                yesterday.setDate(yesterday.getDate() - 1);
                 
-                imap.search(['ALL', ['SINCE', yesterday.toISOString()]], (err, results) => {
+                imap.search(['ALL', ['SINCE', yesterday]], (err, results) => {
                     if (err) return reject(err);
 
                     if (!results || results.length === 0) {
@@ -68,12 +68,10 @@ function processAccount(acc) {
                                 const fromEmail = mail.from.value[0].address;
                                 const subject = mail.subject;
                                 const date = mail.date;
-                                const body = mail.text || '';
                                 const messageId = mail.messageId;
+                                const inReplyTo = mail.inReplyTo;
 
-                                // Check if this is a reply (usually contains 'Re:' or In-Reply-To)
-                                // But more importantly, check if the sender is someone we contact
-                                await checkAndLogReply(fromEmail, acc.user, subject, body, date, messageId);
+                                await checkAndLogReply(fromEmail, acc.user, subject, date, messageId, inReplyTo);
                                 
                                 processed++;
                                 if (processed === results.length) {
@@ -88,9 +86,7 @@ function processAccount(acc) {
                         imap.end();
                     });
 
-                    f.once('end', () => {
-                        console.log(`[${acc.user}] Done fetching ${results.length} messages.`);
-                    });
+                    f.once('end', () => {});
                 });
             });
         });
@@ -107,46 +103,37 @@ function processAccount(acc) {
     });
 }
 
-async function checkAndLogReply(fromEmail, toAccount, subject, body, date, messageId) {
-    // 1. Identify which SPECIFIC email send this is a reply to.
-    // We look for the MOST RECENT send that happened BEFORE the reply date.
-    const { data: lead, error: leadError } = await supabase
+async function checkAndLogReply(fromEmail, toAccount, subject, date, messageId, inReplyTo) {
+    // Identity + Time Logic
+    // Find the most recent send to this email that happened BEFORE the reply
+    const { data: latestSend } = await supabase
         .from('email_logs')
         .select('id, email, campaign_id, sent_at')
         .eq('email', fromEmail)
-        .lt('sent_at', new Date(date).toISOString()) // MUST have been sent before the reply
+        .lt('sent_at', new Date(date).toISOString())
         .order('sent_at', { ascending: false })
         .limit(1)
         .maybeSingle();
 
-    if (leadError || !lead) {
-        console.log(`[REPLY SKIP]: No matching send found for ${fromEmail} before ${date}`);
-        return; 
-    }
+    if (latestSend) {
+        console.log(`🎯 Match: ${fromEmail} replied to ${latestSend.campaign_id}`);
+        
+        const { error: insertError } = await supabase
+            .from('email_replies')
+            .upsert({
+                email_id: latestSend.id,
+                from_email: fromEmail,
+                to_email: toAccount,
+                subject: subject,
+                replied_at: date,
+                message_id: messageId 
+            }, { onConflict: 'message_id' });
 
-    console.log(`🎯 Found reply from lead: ${fromEmail} to ${toAccount}`);
-
-    // 2. Log to 'email_replies'
-    const { error: insertError } = await supabase
-        .from('email_replies')
-        .upsert({
-            email_id: lead.id,
-            from_email: fromEmail,
-            to_email: toAccount,
-            subject: subject,
-            replied_at: date,
-            message_id: messageId // Use this for deduplication
-        }, { onConflict: 'message_id' });
-
-    if (insertError) {
-        if (insertError.code === 'PGRST116') {
-            // Likely table doesn't exist yet, which we know
-            console.error('❌ email_replies table still missing.');
-        } else {
+        if (insertError) {
             console.error('❌ Insert error:', insertError.message);
+        } else {
+            console.log(`✅ Logged reply from ${fromEmail}`);
         }
-    } else {
-        console.log(`✅ Logged reply from ${fromEmail}`);
     }
 }
 
